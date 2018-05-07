@@ -1,0 +1,37 @@
+def SRD_generate_paths(x_disc, x0, kappa, theta, sigma, T, M, I, rand, row, cho_matrix):
+''' 
+Function to simulate Square-Root Diffusion (SRD/CIR) process.
+
+'''
+    dt=T/M
+    x = np.zeros((M + 1, I), dtype=np.float)
+    x[0] = x0
+    xh = np.zeros_like(x)
+    xh[0] = x0
+    sdt = math.sqrt(dt)
+    for t in xrange(1, M + 1):
+    ran = np.dot(cho_matrix, rand[:, t])
+    if x_disc == 'Full Truncation':
+    xh[t] = (xh[t - 1] + kappa * (theta -np.maximum(0, xh[t - 1])) * dt + np.sqrt(np.maximum(0, xh[t - 1])) * sigma * ran[row] * sdt)
+    x[t] = np.maximum(0, xh[t])
+    elif x_disc == 'Partial Truncation':
+    xh[t] = (xh[t - 1] + kappa * (theta - xh[t - 1]) * dt + np.sqrt(np.maximum(0, xh[t - 1])) * sigma * ran[row] * sdt)
+    x[t] = np.maximum(0, xh[t])
+    elif x_disc == 'Truncation':
+    x[t] = np.maximum(0, x[t - 1] + kappa * (theta - x[t - 1]) * dt + np.sqrt(x[t - 1]) * sigma * ran[row] * sdt)
+    elif x_disc == 'Reflection':
+    xh[t] = (xh[t - 1] + kappa * (theta - abs(xh[t - 1])) * dt + np.sqrt(abs(xh[t - 1])) * sigma * ran[row] * sdt)
+    x[t] = abs(xh[t])
+    elif x_disc == 'Higham-Mao':
+    xh[t] = (xh[t - 1] + kappa * (theta - xh[t - 1]) * dt + np.sqrt(abs(xh[t - 1])) * sigma * ran[row] * sdt)
+    x[t] = abs(xh[t])
+    elif x_disc == 'Simple Reflection':
+    x[t] = abs(x[t - 1] + kappa * (theta - x[t - 1]) * dt + np.sqrt(x[t - 1]) * sigma * ran[row] * sdt)
+    elif x_disc == 'Absorption':
+    xh[t] = (np.maximum(0, xh[t - 1]) + kappa * (theta - np.maximum(0, xh[t - 1])) * dt + np.sqrt(np.maximum(0, xh[t - 1])) * sigma *   ran[row] * sdt)
+    x[t] = np.maximum(0, xh[t])
+    else:
+    print x_disc
+    print "No valid Euler scheme."
+    sys.exit(0)
+    return x
